@@ -13,4 +13,7 @@ SELECT DISTINCT cost FROM birdstrikes ORDER BY cost DESC LIMIT 49,1;
 -- Exercise 4: What state figures in the 2nd record, if you filter out all records which have no state and no bird_size specified? ('')
 SELECT * FROM birdstrikes WHERE state IS NOT NULL and bird_size IS NOT NULL;
 
--- Exercise 5: How many days elapsed between the current date and the flights happening in week 52, for incidents from Colorado? (Hint: use NOW, DATEDIFF, WEEKOFYEAR)
+-- Exercise 5: How many days elapsed between the current date and the flights happening in week 52, for incidents from Colorado? (Hint: use NOW, DATEDIFF, WEEKOFYEAR) - 7579
+SELECT * FROM birdstrikes WHERE WEEKOFYEAR(flight_date) = '52' AND state = 'Colorado';
+-- Date 2000-01-01
+SELECT DATEDIFF(NOW(), "2000-01-01");
