@@ -27,7 +27,7 @@ PRIMARY KEY(name));
 
 LOAD DATA LOCAL INFILE '/Users/Terez/Desktop/brandon-telle-cruise-ship-locations_copy/output_ships.csv'
 INTO TABLE ships
-FIELDS TERMINATED BY ';'
+FIELDS TERMINATED BY ','
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES
 (name,callsign,wiki,imo,mmsi,cruise_line,major_cruise_line,year_built,class,gross_tonnage,decks,capacity,shiplength,vessel_type,flag,home_port)
@@ -53,7 +53,7 @@ PRIMARY KEY(ship_name));
 
 LOAD DATA LOCAL INFILE '/Users/Terez/Desktop/brandon-telle-cruise-ship-locations_copy/output_daily_ship_location.csv'
 INTO TABLE dailylocation
-FIELDS TERMINATED BY ';'
+FIELDS TERMINATED BY ','
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES
 (ship_name,callsign,major_cruise_line,loc_date,meters_traveled,lat_start,lon_start,lat_end,lon_end,in_port,stopped_minutes,num_periods,port_city_id,port_city_name,port_city_country)
@@ -70,7 +70,7 @@ PRIMARY KEY(id));
 
 LOAD DATA LOCAL INFILE '/Users/Terez/Desktop/brandon-telle-cruise-ship-locations_copy/output_cities.csv'
 INTO TABLE cities
-FIELDS TERMINATED BY ';'
+FIELDS TERMINATED BY ','
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES
 (id,city,country,country_code,lat,lon)
@@ -94,7 +94,7 @@ PRIMARY KEY(date_published));
 
 LOAD DATA LOCAL INFILE '/Users/Terez/Desktop/brandon-telle-cruise-ship-locations_copy/output_deaths.csv'
 INTO TABLE deaths
-FIELDS TERMINATED BY ';'
+FIELDS TERMINATED BY ','
 LINES TERMINATED BY '\r\n'
 IGNORE 1 LINES
 (date_published,death_time,death_type,deceased_name,deceased_age,deceased_gender,is_passenger,is_crew,ship_cruise_line,ship_name,ship_callsign,url)
