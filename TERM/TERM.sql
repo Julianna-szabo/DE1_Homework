@@ -50,7 +50,7 @@ SELECT * FROM ships;
 DROP TABLE IF EXISTS deaths;
 
 CREATE TABLE deaths
-(ID INT NOT NULL AUTO_INCREMENT,
+(death_ID INT NOT NULL AUTO_INCREMENT,
 date_published DATE,
 death_type VARCHAR(100),
 deceased_name VARCHAR(100),
@@ -62,7 +62,7 @@ ship_cruise_line VARCHAR(50),
 ship_name VARCHAR(50) NOT NULL,
 ship_callsign VARCHAR (50),
 url VARCHAR(100), 
-PRIMARY KEY(ID),
+PRIMARY KEY(death_ID),
 FOREIGN KEY (ship_name)
 REFERENCES ships(ship_name));
 
@@ -101,7 +101,7 @@ SELECT * FROM itinerary LIMIT 50;
 DROP TABLE IF EXISTS dailylocation;
 
 CREATE TABLE dailylocation
-(ID INT NOT NULL AUTO_INCREMENT,
+(unique_ID INT NOT NULL AUTO_INCREMENT,
 ship_name VARCHAR(50) NOT NULL,
 callsign VARCHAR(50),
 loc_date DATE,
@@ -113,7 +113,7 @@ in_port VARCHAR(10),
 port_city_id VARCHAR (100),
 port_city_name VARCHAR(100),
 port_country VARCHAR (20),
-PRIMARY KEY(ID),
+PRIMARY KEY(unique_ID),
 FOREIGN KEY (ship_name)
 REFERENCES ships(ship_name),
 FOREIGN KEY (port_country)
@@ -146,7 +146,7 @@ DROP TABLE IF EXISTS deaths_on_ships;
 
 CREATE TABLE deaths_on_ships AS
 	SELECT
-		d.ID,
+		d.death_ID,
         d.date_published,
         d.is_passenger,
         s.ship_name,
@@ -173,8 +173,11 @@ CREATE TABLE deaths_by_itinerary(
 
 -- ETL
 
+-- For transformation, I will solve the issue of the column length of dailylocation.port_country
+
+SELECT LENGTH(port_country) FROM dailylocation;
+
 -- First importing of data
--- For transformation, I 
 
 TRUNCATE deaths_by_itinerary;
 
@@ -223,11 +226,11 @@ CREATE TRIGGER deaths_insert
 AFTER INSERT
 ON deaths FOR EACH ROW
 BEGIN
-	INSERT INTO messages SELECT CONCAT('death_ID: ', NEW.ID);
+	INSERT INTO messages SELECT CONCAT('death_ID: ', NEW.death_ID);
     
     INSERT INTO deaths_on_ships
 	SELECT
-		d.ID,
+		d.death_ID,
         d.date_published,
         d.is_passenger,
         s.ship_name,
@@ -236,7 +239,7 @@ BEGIN
 			FROM deaths AS d
 				LEFT JOIN ships AS s
 				USING (ship_name)
-            WHERE ID = NEW.ID;
+            WHERE death_ID = NEW.death_ID;
 END $$    
 
 DELIMITER ;
@@ -249,7 +252,7 @@ CREATE TRIGGER deaths_insert_from_aggrgation
 AFTER INSERT
 ON deaths_on_ships FOR EACH ROW
 BEGIN
-	INSERT INTO messages SELECT CONCAT('death_on_ships_ID: ', NEW.ID);
+	INSERT INTO messages SELECT CONCAT('death_on_ships_ID: ', NEW.death_ID);
     
     INSERT INTO deaths_by_itinerary
 	SELECT
@@ -265,15 +268,17 @@ BEGIN
 					AND dl.loc_date = d.date_published
 				LEFT JOIN itinerary i
 				ON LEFT(dl.port_country,2) = i.country_code
-			WHERE ID = NEW.ID
+			WHERE death_ID = NEW.death_ID
             ORDER BY d.date_published;
 END $$
 
 DELIMITER ;
 
-INSERT INTO deaths
-VALUES(NULL,'2017-08-15', 'suicide', 'Someone John', 45, 'Male', 'TRUE', 'FALSE', 'Carnival Cruise Lines', 'Carnival Splender', '', 'www.tlc.com');
+INSERT INTO deaths (date_published, death_type, deceased_name, deceased_age, deceased_gender, is_passenger, is_crew, ship_cruise_line, ship_name, ship_callsign, url)
+VALUES('2017-08-15', 'suicide', 'Someone John', 45, 'Male', 'TRUE', 'FALSE', 'Carnival Cruise Lines', 'Carnival Splender', '', 'www.tlc.com');
+
 SELECT * FROM deaths;
+SELECT * FROM messages;
 
 -- Data Marks in the form of views
 
