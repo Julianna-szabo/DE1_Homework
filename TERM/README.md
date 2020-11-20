@@ -38,7 +38,7 @@ Since i put this table together to my liking it did not require cleaning.
 
 After laoding the tables into SQL, this is the schema they create:
 
-![shema](https://github.com/Julianna_szabo/DE_Homework/TERM/master/shema.png?raw=true)
+![shema](shema.png)
 
 ## Analytical plan
 
@@ -48,5 +48,35 @@ With the other tables I would like to answer the question:
 
 To do this I need to create the following:
 1, An analytical layer 
+One table that includes all the information I need (death date, if they are a passenger, ship name, major cruise line, and the itinerary they are on)
+2, ETL
+I first create a stored procedure that loads the data into my table the first time.
+Then I create triggers that will update that table whenever a new death is added.
+3, Data Marks
+I will create views that answer a specific question asked in the analytics.
+
+## Analytical layer
+
+I decided to first create the table since it allowed me to add an auto-incremented ID column. Since I was combining three tables this was safer than pulling one of the IDs from the previous tables.
+
+
+## ETL
+
+I ran into some trouble trying to create the jon on the country code in two tabled. I found on that there was an additional space at the end of one of these columns that made them not equal and therefore could not be combined. I included this transformation in my stored procedure so the JOIN could be executed without any issues.
+
+The first JOIN I tried was too large, therefore, I needed to cut down. I decided to first do a smaller JOIN of two tabled and then use that to join the other tables. This was easier for the computer to handle. I executed the first JOIN as a LEFT JOIN so that I would not loose observations early.
+Because of these two tables I also needed to create two triggers so that the data could be pulled from the original to the first join table and from there to the final analytical table.
+
+I also created a messages table to keep track of all the triggers executed.
+
+## Data Marks
+
+After successfully creating my analytical data layer, I created three views to show interesting comparisons in the data.
+
+For the first one, I answered the original question by comparing the Carribean to the Northern Europe itinerary in terms of death numbers.
+
+For the second, I wanted to see how the deatsh spread out over the years.
+
+For the last, I wanted to see how different companies within the cruise industry compare to each other.
 
 
