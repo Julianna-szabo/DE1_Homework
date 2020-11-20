@@ -2,6 +2,9 @@
 
 ## Gathering the data
 
+Coming from the hospitality industry, I wanted to find data related to that since I would understand it.  
+I found a great data set on cruise lines, which really interest me.
+
 I found my data on data.works.
 The data has been collected and previously analysed by Brandon Telle.
 This is the link: https://data.world/brandon-telle/cruise-ship-locations
