@@ -48,13 +48,26 @@ My most interesting table is deaths. It shows the number of people dying on crui
 With the other tables I would like to answer the question:
 *Which route did most people die on?*
 
+Class | Measure
+:-----| :-------------
+Fact  | Death
+Dimension  | Date
+Dimension  | Passanger or Crew
+Dimension  | Ship name
+Dimension  | Cruise line
+Dimension  | Itinerary
+
+
 To do this I need to create the following:
-1, An analytical layer 
+
+1. An analytical layer  
 One table that includes all the information I need (death date, if they are a passenger, ship name, major cruise line, and the itinerary they are on)
-2, ETL
-I first create a stored procedure that loads the data into my table the first time.
+
+2. ETL  
+I first create a stored procedure that loads the data into my table the first time.  
 Then I create triggers that will update that table whenever a new death is added.
-3, Data Marks
+
+3. Data Marks  
 I will create views that answer a specific question asked in the analytics.
 
 ## Analytical layer
