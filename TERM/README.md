@@ -30,7 +30,7 @@ I deleted some columns from this table which where unneccessary for my analysis.
 
 This table I ended up discarding since it was not complete and the information was already contained in the dailylocation table.
 
-5. itineraries
+5, itineraries
 
 Since i put this table together to my liking it did not require cleaning.
 
@@ -38,7 +38,7 @@ Since i put this table together to my liking it did not require cleaning.
 
 After laoding the tables into SQL, this is the schema they create:
 
-![shema](shema.png)
+![schema](schema.png)
 
 ## Analytical plan
 
@@ -75,8 +75,10 @@ After successfully creating my analytical data layer, I created three views to s
 
 For the first one, I answered the original question by comparing the Carribean to the Northern Europe itinerary in terms of death numbers.
 
-For the second, I wanted to see how the deatsh spread out over the years.
+For the second, I wanted to see how the deatsh spread out over the years. Therefore I grouped the deaths by year.
 
 For the last, I wanted to see how different companies within the cruise industry compare to each other.
+
+Of course the specific itineraries or companies can be easily exchanged or replicated for other companies. 
 
 
