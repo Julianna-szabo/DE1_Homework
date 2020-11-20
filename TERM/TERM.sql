@@ -6,6 +6,9 @@ USE cruiseships;
 
 -- First I created and loaded all my data into the tables
 -- To do so, this first needs to be turned on
+	-- Since I am working on a Mac, I am loading my data through LOAD DATA LOCAL INFILE so that option needs to be turned on
+    -- I am also adding foreign keys to the tables to show in the schema, but since MySQL is not really friendly to
+    -- foreign keys I needed to turn the check function off to be able to still load my data in properly.
 
 SHOW VARIABLES LIKE "local_infile";
 SET GLOBAL local_infile = ON;
@@ -49,6 +52,9 @@ SELECT * FROM ships;
 
 DROP TABLE IF EXISTS deaths;
 
+-- Since the deaths table was categories by date_published and there could me multiple deaths published on one day
+-- I decided to create an additional ID column that will auto increment so that each row has it's own unique identifier
+
 CREATE TABLE deaths
 (death_ID INT NOT NULL AUTO_INCREMENT,
 date_published DATE,
@@ -79,6 +85,10 @@ SELECT * FROM deaths LIMIT 50;
 
 -- Creation of Table #3
 
+-- This is the only data that does not come from the original data set.
+-- I created this data based on the itineraries of MSC Cruise Lines 
+-- (From https://www.msccruises.com/en-gl/Plan-Book/Find-Cruise.aspx)
+
 DROP TABLE IF EXISTS itinerary;
 
 CREATE TABLE itinerary
@@ -99,6 +109,8 @@ SELECT * FROM itinerary LIMIT 50;
 -- Creation of Table #4
 
 DROP TABLE IF EXISTS dailylocation;
+
+-- This table had a combined unique key, so I again decided to create an ID column to create a unique ID for each row.
 
 CREATE TABLE dailylocation
 (unique_ID INT NOT NULL AUTO_INCREMENT,
@@ -130,7 +142,7 @@ SELECT * FROM dailylocation LIMIT 50;
 
 
 -- ANALYSIS
--- Which route did most people die on? (use country to determine possible route)
+-- Which route did most people die on?
 
 -- Analytical layer (Data warehouse) : All deaths on ships by date
 -- ETL: pulling the new daily entries to dailylocation into the Data Warehouse and from there to the Data Marks
@@ -138,7 +150,10 @@ SELECT * FROM dailylocation LIMIT 50;
 
 -- Now I can combine the tables with a JOIN to give me a new table to create an Analytical Data Layer
 
--- First I am joining some of the smaller tables to make the future joins easer
+-- First I am joining some of the smaller tables to make the future joins easer.
+-- I ran into computational problems when I tried to only execute one join so this was my solution to the problem.
+-- It is not the most efficient way to execute this but it runs smoothly.
+-- By using a LEFT JOIN instead of an INNER JOIN I am avoiding eliminating observations early.
 
 -- Deaths and ships
 
@@ -160,6 +175,9 @@ SELECT * FROM deaths_on_ships;
     
 -- Analytical layer table
 
+-- I have decided to first create the table instead of using CREATE TABLE ... AS so I can use the Autoincrement function
+-- Since i will be combining multiple tables none of thier unique IDs seemed appropriate to use therefore.
+
 DROP TABLE IF EXISTS deaths_by_itinerary;
 
 CREATE TABLE deaths_by_itinerary(
@@ -173,10 +191,6 @@ CREATE TABLE deaths_by_itinerary(
 
 -- ETL
 
--- For transformation, I will solve the issue of the column length of dailylocation.port_country
-
-SELECT LENGTH(port_country) FROM dailylocation;
-
 -- First importing of data
 
 TRUNCATE deaths_by_itinerary;
@@ -187,12 +201,18 @@ DELIMITER $$
 
 CREATE PROCEDURE aggregation()
 BEGIN
+	-- Firtst I will do a transformation on my dailylocation port_country column
+    UPDATE dailylocation
+	SET port_country = LEFT(port_country,2)
+	WHERE unique_ID <> 0 AND LENGTH(port_country) > 2;
+    
+	-- Since the above step solved the compatibility error, I can now do the JOIN
 	INSERT INTO deaths_by_itinerary
 	SELECT
 		NULL,
 		d.date_published,
 		d.is_passenger,
-		d.ship_name,
+		dl.ship_name,
 		d.major_cruise_line,
 		i.itinerary
 			FROM dailylocation dl
@@ -200,7 +220,7 @@ BEGIN
 				ON dl.ship_name = d.ship_name
 					AND dl.loc_date = d.date_published
 				LEFT JOIN itinerary i
-				ON LEFT(dl.port_country,2) = i.country_code
+				ON dl.port_country = i.country_code
 			ORDER BY d.date_published;
 END $$
 
@@ -210,13 +230,17 @@ CALL aggregation();
 
 SELECT * FROM deaths_by_itinerary LIMIT 10;
 
-
 -- Adding new data to the table when it is added in the operational layer
+	-- I ended up creating two triggers since I have an intermediary table between my operational data layer and the
+    -- analytical one. Therefore the first one pulls data into the middle table and the second trigger pulls data
+    -- from there into the final analytical table.
 
 DROP TABLE IF EXISTS messages;
 
 CREATE TABLE IF NOT EXISTS messages (
 message varchar(100) NOT NULL);
+
+-- Trigger # 1
 
 DROP TRIGGER IF EXISTS deaths_insert;
 
@@ -244,6 +268,8 @@ END $$
 
 DELIMITER ;
 
+-- Trigger # 2
+
 DROP TRIGGER IF EXISTS deaths_insert_from_aggrgation; 
 
 DELIMITER $$
@@ -253,6 +279,12 @@ AFTER INSERT
 ON deaths_on_ships FOR EACH ROW
 BEGIN
 	INSERT INTO messages SELECT CONCAT('death_on_ships_ID: ', NEW.death_ID);
+    
+    -- I am keeping this transformation in here since there may have been additions to the dailylocation table as well.
+    -- It will only update the ones that have not been so far and ensure the JOIN will work properly.
+    UPDATE dailylocation
+	SET port_country = LEFT(port_country,2)
+	WHERE unique_ID <> 0 AND LENGTH(port_country) > 2;
     
     INSERT INTO deaths_by_itinerary
 	SELECT
@@ -274,13 +306,17 @@ END $$
 
 DELIMITER ;
 
+-- Testing trigger by adding a new line to the death table and seeing if it will pull it through to the deaths_by_itinerary table
+
 INSERT INTO deaths (date_published, death_type, deceased_name, deceased_age, deceased_gender, is_passenger, is_crew, ship_cruise_line, ship_name, ship_callsign, url)
 VALUES('2017-08-15', 'suicide', 'Someone John', 45, 'Male', 'TRUE', 'FALSE', 'Carnival Cruise Lines', 'Carnival Splender', '', 'www.tlc.com');
 
-SELECT * FROM deaths;
-SELECT * FROM messages;
+SELECT * FROM deaths; -- to check if the INSERT INTO has run properly
+SELECT * FROM messages; -- to check if the trigger has run by itself as instructed
 
 -- Data Marks in the form of views
+-- I have created multiple views. The first ones answer the original question. The other two are interesting other
+-- comparisons that can be made based on the data. Of course companies or itineraries could be exchanged with others.
 
 -- Answer to original question
 -- Do more people die in the Carribbean or in Northern Europe?
