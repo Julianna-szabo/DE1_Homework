@@ -38,7 +38,7 @@ Since i put this table together to my liking it did not require cleaning.
 
 After laoding the tables into SQL, this is the schema they create:
 
-![schema](schema.png)
+![schema](Schema.png)
 
 ## Analytical plan
 
